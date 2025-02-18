@@ -1,120 +1,184 @@
 import React, { useState } from 'react';
-import { View,Text,StyleSheet,Platform,Pressable } from 'react-native';
+import { View, Text, StyleSheet, Platform, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function routine_page() {
-  const [selectedDay, setSelectedDay] = useState(null);
+// this defines the type for weekdays
+interface Weekday {
+  name: string;
+  initial: string;
+}
 
-  const weekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday'
+export default function RoutinePage(): JSX.Element {
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+
+  // List of weekdays with initials
+  const daysOfWeek: Weekday[] = [
+    { name: 'Monday', initial: 'M' },
+    { name: 'Tuesday', initial: 'T' },
+    { name: 'Wednesday', initial: 'W' },
+    { name: 'Thursday', initial: 'T' },
+    { name: 'Friday', initial: 'F' },
+    { name: 'Saturday', initial: 'S' },
+    { name: 'Sunday', initial: 'S' }
   ];
 
-  const handleDayPress = (day) => {
-    setSelectedDay(day);
-    if (Platform.OS === 'ios') {
-      console.log('iOS press:', day);
-    } else {
-      console.log('Android press:', day);
-    }
+  //This just logs the clicks and on different OS like web/ios so that we can connect it later 
+  const handleDaySelect = (day: string): void => {
+    setActiveDay(day);
+    console.log(`Selected: ${day} on ${Platform.OS}`);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style={Platform.OS === 'ios' ? 'dark' : 'light'} />
-      <View style={styles.content}>
-        <Text style={styles.title}>
-          Workout Routine
-        </Text>
+      <StatusBar style="light" />
 
-        {weekdays.map((day) => (
-          <Pressable
-            key={day}
-            style={({pressed}) => [
-              styles.button,
-              Platform.OS === 'ios' ? styles.iosButton : styles.androidButton,
-              pressed && styles.buttonPressed,
-              selectedDay === day && styles.selectedButton
-            ]}
-            onPress={() => handleDayPress(day)}
-          >
-            <Text style={styles.buttonText}>
-              {day}
-            </Text>
-          </Pressable>
-          
-
-        ))}
-  
+      {/* The Red Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Fit Pal</Text>
       </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Workout Routine</Text>
+
+        {/* Day Selection List */}
+        {daysOfWeek.map(({ name, initial }) => {
+          const isSelected = activeDay === name;
+
+          return (
+            <Pressable
+              key={name}
+              style={({ pressed }) => [
+                styles.dayButton,
+                isSelected && styles.selectedButton,
+                pressed && styles.buttonPressed
+              ]}
+              onPress={() => handleDaySelect(name)}
+            >
+              {/* Day Initial Circle */}
+              <View style={[
+                styles.initialCircle,
+                isSelected && styles.selectedInitialCircle
+              ]}>
+                <Text style={[
+                  styles.initialText,
+                  isSelected && styles.selectedInitialText
+                ]}>
+                  {initial}
+                </Text>
+              </View>
+
+              {/* Day Name */}
+              <Text style={[
+                styles.dayButtonText,
+                isSelected && styles.selectedButtonText
+              ]}>
+                {name}
+              </Text>
+
+              {/* Down Arrow */}
+              <Ionicons 
+                name="chevron-down" 
+                size={20} 
+                color={isSelected ? '#E53935' : '#777'} 
+              />
+            </Pressable>
+          );
+        })}
+      </ScrollView>
     </SafeAreaView>
   );
 }
+//Defiently check out Ionicons,
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f9f9f9', 
   },
-  content: {
-    flex: 1,
+  header: {
+    backgroundColor: '#E53935',
+    paddingVertical: 16,
     alignItems: 'center',
-    alignContent:'center',
-    
-    
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    alignItems: 'center',
   },
   title: {
-    textAlign:'center',
-    fontSize: Platform.OS === 'ios' ? 28 : 24,
-    fontWeight: Platform.OS === 'ios' ? '600' : 'bold',
-    padding:40,
-    minWidth:400,
-    backgroundColor:"#2196F3"
-    
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '600',
+    marginVertical: 16,
+    color: '#333',
   },
-  button: {
-    padding:20,
-    borderRadius: Platform.OS === 'ios' ? 8 : 4,
-    minWidth: 400,
+  dayButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFF',
-    borderBottomWidth:2,
-    borderBottomColor:'#2196F3',
-    
-  },
-  iosButton: {
+    justifyContent: 'space-between',
+    padding: 16,
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  androidButton: {
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
   },
   buttonPressed: {
     opacity: 0.8,
+    backgroundColor: '#F8F8F8',
   },
   selectedButton: {
-    backgroundColor: Platform.OS === 'ios' ? '#808080' : '#808080',
+    backgroundColor: '#FFEBEE',
+    borderBottomWidth: 2,
+    borderBottomColor: '#E53935',
   },
-  buttonText: {
-    color: '#000',
+  dayButtonText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    flex: 1,
+    marginLeft: 12,
+  },
+  selectedButtonText: {
+    color: '#E53935',
+    fontWeight: 'bold',
+  },
+  initialCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  selectedInitialCircle: {
+    backgroundColor: '#E53935', 
+    borderColor: '#E53935',
+  },
+  initialText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#555',
   },
-  platformNote: {
-    marginTop: 20,
-    color: '#666',
-    fontSize: Platform.OS === 'ios' ? 14 : 13,
+  selectedInitialText: {
+    color: '#FFFFFF',
   },
-
 });
+
