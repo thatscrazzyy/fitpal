@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Platform, Pressable, TextInput, ScrollView } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from '@expo/vector-icons';
-
+// need to add AI here
 // This is the main Screm 
 export default function WorkoutScreen() {
   const generateWorkout = () => {
