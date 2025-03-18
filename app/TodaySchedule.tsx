@@ -4,10 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
-// this defines the type for weekdays
+// Define the type for weekdays
 interface Weekday {
   name: string;
   initial: string;
+}
+
+// Define the props for our custom touchable component
+interface CustomTouchableProps {
+  style?: any;
+  onPress: () => void;
+  children: React.ReactNode;
 }
 
 export default function RoutinePage(): JSX.Element {
@@ -24,7 +31,7 @@ export default function RoutinePage(): JSX.Element {
     { name: 'Sunday', initial: 'S' }
   ];
 
-  //This just logs the clicks and on different OS like web/ios so that we can connect it later 
+  // This just logs the clicks and on different OS like web/ios so that we can connect it later 
   const handleDaySelect = (day: string): void => {
     setActiveDay(day);
     console.log(`Selected: ${day} on ${Platform.OS}`);
@@ -90,7 +97,19 @@ export default function RoutinePage(): JSX.Element {
     </SafeAreaView>
   );
 }
-//Defiently check out Ionicons,
+
+// Custom touchable component with a different name to avoid conflicts
+const CustomTouchable: React.FC<CustomTouchableProps> = ({ style, onPress, children }) => (
+  <Pressable
+    style={({ pressed }) => [
+      style,
+      pressed && styles.buttonPressed
+    ]}
+    onPress={onPress}
+  >
+    {children}
+  </Pressable>
+);
 
 // Styles
 const styles = StyleSheet.create({
@@ -181,4 +200,3 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-

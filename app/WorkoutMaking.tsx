@@ -3,8 +3,21 @@ import { StyleSheet, View, Text, Platform, Pressable, TextInput, ScrollView } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from '@expo/vector-icons';
-// need to add AI here
-// This is the main Screm 
+
+// Define interface for InputField props
+interface InputFieldProps {
+  label: string;
+  icon: typeof Ionicons.defaultProps.name;
+  placeholder: string;
+}
+
+// Define interface for custom touchable props
+interface CustomTouchableProps {
+  style?: any;
+  onPress: () => void;
+  children: React.ReactNode;
+}
+
 export default function WorkoutScreen() {
   const generateWorkout = () => {
     console.log(`Generating workout for ${Platform.OS.toUpperCase()}...`);
@@ -32,16 +45,13 @@ export default function WorkoutScreen() {
           <InputField label="Workout Length (mins):" icon="time-outline" placeholder="e.g. 45" />
 
           {/* Generate Button */}
-          <Pressable 
-            style={({ pressed }) => [
-              styles.generateButton, 
-              pressed ? styles.buttonPressed : {}
-            ]}
+          <CustomTouchable 
+            style={styles.generateButton}
             onPress={generateWorkout}
           >
             <Ionicons name="barbell-outline" size={22} color="#FFF" />
             <Text style={styles.buttonText}>Generate</Text>
-          </Pressable>
+          </CustomTouchable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -49,7 +59,7 @@ export default function WorkoutScreen() {
 }
 
 // The InputField component
-const InputField = ({ label, icon, placeholder }) => (
+const InputField: React.FC<InputFieldProps> = ({ label, icon, placeholder }) => (
   <View style={styles.inputGroup}>
     <View style={styles.labelContainer}>
       <Ionicons name={icon} size={20} color="#E53935" />
@@ -64,6 +74,18 @@ const InputField = ({ label, icon, placeholder }) => (
   </View>
 );
 
+// Custom touchable component with a different name to avoid conflicts
+const CustomTouchable: React.FC<CustomTouchableProps> = ({ style, onPress, children }) => (
+  <Pressable
+    style={({ pressed }) => [
+      style,
+      pressed ? styles.buttonPressed : {}
+    ]}
+    onPress={onPress}
+  >
+    {children}
+  </Pressable>
+);
 
 //these are all the styles/color componenets used on this page
 const styles = StyleSheet.create({
@@ -152,4 +174,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-
