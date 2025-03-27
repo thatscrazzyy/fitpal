@@ -1,23 +1,72 @@
-import React from 'react';
+// app/Settings.tsx
+
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
   Pressable, 
   Switch, 
-  ScrollView 
+  ScrollView,
+  Alert,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from './styles/globalstyles';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function SettingsScreen(): JSX.Element {
-  const [darkModeEnabled, setDarkModeEnabled] = React.useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const { settings, updateSettings, resetSettings } = useSettings();
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKey, setApiKey] = useState(settings.apiKey || '');
 
-  const toggleDarkMode = () => setDarkModeEnabled(previousState => !previousState);
-  const toggleNotifications = () => setNotificationsEnabled(previousState => !previousState);
+  const toggleUseOpenAI = async () => {
+    await updateSettings({ useOpenAI: !settings.useOpenAI });
+  };
+
+  const toggleDarkMode = async () => {
+    await updateSettings({ darkModeEnabled: !settings.darkModeEnabled });
+  };
+
+  const toggleNotifications = async () => {
+    await updateSettings({ notificationsEnabled: !settings.notificationsEnabled });
+  };
+
+  const toggleMetricUnits = async () => {
+    await updateSettings({ metricUnits: !settings.metricUnits });
+  };
+
+  const saveApiKey = async () => {
+    await updateSettings({ apiKey });
+    setShowApiKeyModal(false);
+    Alert.alert('Success', 'API key saved successfully.');
+  };
+
+  const handleResetSettings = () => {
+    Alert.alert(
+      'Reset Settings',
+      'Are you sure you want to reset all settings to default values?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Reset',
+          onPress: async () => {
+            await resetSettings();
+            Alert.alert('Success', 'Settings have been reset to defaults.');
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,10 +88,10 @@ export default function SettingsScreen(): JSX.Element {
               title="Dark Mode" 
               rightElement={
                 <Switch
-                  value={darkModeEnabled}
+                  value={settings.darkModeEnabled}
                   onValueChange={toggleDarkMode}
                   trackColor={{ false: '#D1D1D6', true: '#FFCDD2' }}
-                  thumbColor={darkModeEnabled ? COLORS.primary : '#F4F3F4'}
+                  thumbColor={settings.darkModeEnabled ? COLORS.primary : '#F4F3F4'}
                 />
               }
             />
@@ -52,18 +101,52 @@ export default function SettingsScreen(): JSX.Element {
               title="Notifications" 
               rightElement={
                 <Switch
-                  value={notificationsEnabled}
+                  value={settings.notificationsEnabled}
                   onValueChange={toggleNotifications}
                   trackColor={{ false: '#D1D1D6', true: '#FFCDD2' }}
-                  thumbColor={notificationsEnabled ? COLORS.primary : '#F4F3F4'}
+                  thumbColor={settings.notificationsEnabled ? COLORS.primary : '#F4F3F4'}
                 />
               }
             />
             
             <SettingItem 
-              icon="language-outline" 
-              title="Language" 
-              subtitle="English (US)"
+              icon="speedometer-outline" 
+              title="Use Metric Units" 
+              subtitle="Display measurements in cm/kg instead of in/lbs"
+              rightElement={
+                <Switch
+                  value={settings.metricUnits}
+                  onValueChange={toggleMetricUnits}
+                  trackColor={{ false: '#D1D1D6', true: '#FFCDD2' }}
+                  thumbColor={settings.metricUnits ? COLORS.primary : '#F4F3F4'}
+                />
+              }
+            />
+          </View>
+          
+          {/* AI Settings Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>AI Configuration</Text>
+            
+            <SettingItem 
+              icon="cloud-outline" 
+              title="Use OpenAI API" 
+              subtitle="Generate workouts with AI"
+              rightElement={
+                <Switch
+                  value={settings.useOpenAI}
+                  onValueChange={toggleUseOpenAI}
+                  trackColor={{ false: '#D1D1D6', true: '#FFCDD2' }}
+                  thumbColor={settings.useOpenAI ? COLORS.primary : '#F4F3F4'}
+                />
+              }
+            />
+            
+            <SettingItem 
+              icon="key-outline" 
+              title="OpenAI API Key" 
+              subtitle={settings.apiKey ? "API key is set" : "Set your OpenAI API key"}
+              onPress={() => setShowApiKeyModal(true)}
               showArrow
             />
           </View>
@@ -83,12 +166,6 @@ export default function SettingsScreen(): JSX.Element {
               title="Privacy" 
               showArrow
             />
-            
-            <SettingItem 
-              icon="shield-outline" 
-              title="Security" 
-              showArrow
-            />
           </View>
           
           {/* Support Section */}
@@ -102,18 +179,21 @@ export default function SettingsScreen(): JSX.Element {
             />
             
             <SettingItem 
-              icon="chatbubble-outline" 
-              title="Contact Us" 
-              showArrow
-            />
-            
-            <SettingItem 
               icon="information-circle-outline" 
               title="About" 
               subtitle="Version 1.0.0"
               showArrow
             />
           </View>
+          
+          {/* Reset Settings Button */}
+          <CustomTouchable 
+            style={styles.resetButton}
+            onPress={handleResetSettings}
+          >
+            <Ionicons name="refresh-outline" size={20} color="#E57373" />
+            <Text style={styles.resetButtonText}>Reset All Settings</Text>
+          </CustomTouchable>
           
           {/* Sign Out Button */}
           <CustomTouchable 
@@ -125,6 +205,66 @@ export default function SettingsScreen(): JSX.Element {
           </CustomTouchable>
         </View>
       </ScrollView>
+      
+      {/* API Key Modal */}
+      <Modal
+        visible={showApiKeyModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowApiKeyModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalContainer}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>OpenAI API Key</Text>
+              <Pressable 
+                style={styles.closeButton}
+                onPress={() => setShowApiKeyModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#333" />
+              </Pressable>
+            </View>
+            
+            <Text style={styles.modalDescription}>
+              Enter your OpenAI API key to generate personalized workout plans. You can get an API key from the OpenAI website.
+            </Text>
+            
+            <TextInput
+              style={styles.apiKeyInput}
+              placeholder="Enter your OpenAI API key here"
+              placeholderTextColor="#999"
+              value={apiKey}
+              onChangeText={setApiKey}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={true}
+            />
+            
+            <Text style={styles.securityNote}>
+              Your API key is stored securely on your device only.
+            </Text>
+            
+            <View style={styles.modalButtonsContainer}>
+              <Pressable 
+                style={styles.cancelButton}
+                onPress={() => setShowApiKeyModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              
+              <Pressable 
+                style={styles.saveButton}
+                onPress={saveApiKey}
+              >
+                <Text style={styles.saveButtonText}>Save Key</Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -143,10 +283,10 @@ const CustomTouchable = ({ style, onPress, children }) => (
 );
 
 // Setting item component
-const SettingItem = ({ icon, title, subtitle, rightElement, showArrow }) => (
+const SettingItem = ({ icon, title, subtitle, rightElement, showArrow, onPress }) => (
   <CustomTouchable
     style={styles.settingItem}
-    onPress={() => console.log(`${title} pressed`)}
+    onPress={onPress || (() => console.log(`${title} pressed`))}
   >
     <View style={styles.settingIconContainer}>
       <Ionicons name={icon} size={22} color={COLORS.primary} />
@@ -237,6 +377,22 @@ const styles = StyleSheet.create({
   settingRight: {
     marginLeft: 8,
   },
+  resetButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FFEBEE',
+    borderRadius: 10,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  resetButtonText: {
+    color: '#E57373',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
   signOutButton: {
     flexDirection: 'row',
     backgroundColor: COLORS.primary,
@@ -244,7 +400,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 16,
   },
   signOutText: {
     color: '#FFF',
@@ -254,5 +409,92 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.7,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 500,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#555',
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  apiKeyInput: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  securityNote: {
+    fontSize: 14,
+    color: '#777',
+    marginBottom: 20,
+    fontStyle: 'italic',
+  },
+  modalButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#555',
+    fontWeight: '500',
+  },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    color: '#FFF',
+    fontWeight: '600',
   },
 });

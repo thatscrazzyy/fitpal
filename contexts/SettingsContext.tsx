@@ -4,7 +4,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AppSettings {
-  useGeminiAI: boolean;
+  useOpenAI: boolean;  // Changed from useGeminiAI to useOpenAI
   apiKey: string;
   notificationsEnabled: boolean;
   darkModeEnabled: boolean;
@@ -19,7 +19,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  useGeminiAI: true,
+  useOpenAI: true,  // Changed from useGeminiAI to useOpenAI
   apiKey: '',
   notificationsEnabled: true,
   darkModeEnabled: false,
@@ -38,7 +38,15 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       try {
         const storedSettings = await AsyncStorage.getItem('app_settings');
         if (storedSettings) {
-          setSettings(JSON.parse(storedSettings));
+          const parsedSettings = JSON.parse(storedSettings);
+          
+          // Handle migration from previous versions (Gemini to OpenAI)
+          if ('useGeminiAI' in parsedSettings && !('useOpenAI' in parsedSettings)) {
+            parsedSettings.useOpenAI = parsedSettings.useGeminiAI;
+            delete parsedSettings.useGeminiAI;
+          }
+          
+          setSettings({...defaultSettings, ...parsedSettings});
         }
       } catch (error) {
         console.error('Error loading settings:', error);
