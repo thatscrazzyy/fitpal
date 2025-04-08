@@ -1,4 +1,3 @@
-// app/index.tsx
 
 import React, { useRef, useEffect } from 'react';
 import { StyleSheet, View, Text, SafeAreaView, TouchableOpacity, Animated, Dimensions, StatusBar, ImageBackground } from 'react-native';
@@ -40,15 +39,19 @@ const WelcomeScreen: React.FC = () => {
   }, []);
 
   const navigateToWorkoutCreation = () => {
-    router.push('/WorkoutMaking');
+    router.push('WorkoutMaking');
   };
 
   const navigateToSchedule = () => {
-    router.push('/TodaySchedule');
+    router.push('TodaySchedule');
   };
   
   const navigateToSettings = () => {
-    router.push('/Settings');
+    router.push('Settings');
+  };
+
+  const navigateToNutrition = () => {
+    router.push('Nutrition');
   };
 
   return (
@@ -105,6 +108,16 @@ const WelcomeScreen: React.FC = () => {
                 </View>
               </View>
 
+              <View style={styles.featureBox}>
+                <Ionicons name="restaurant-outline" size={24} color={COLORS.primary} />
+                <View style={styles.featureText}>
+                  <Text style={styles.featureTitle}>Nutrition Tracking</Text>
+                  <Text style={styles.featureDescription}>
+                    Track your calories and macros for better results.
+                  </Text>
+                </View>
+              </View>
+
               {/* Buttons */}
               <TouchableOpacity 
                 style={styles.startButton}
@@ -118,6 +131,13 @@ const WelcomeScreen: React.FC = () => {
                 onPress={navigateToSchedule}
               >
                 <Text style={styles.secondaryButtonText}>View Schedule</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.nutritionButton}
+                onPress={navigateToNutrition}
+              >
+                <Text style={styles.nutritionButtonText}>Nutrition Tracker</Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -164,6 +184,16 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   secondaryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 25,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  nutritionButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 25,
     height: 52,
@@ -233,6 +263,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   secondaryButtonText: {
+    color: COLORS.text,
+    fontSize: 17,
+    fontWeight: '500',
+  },
+  nutritionButtonText: {
     color: COLORS.text,
     fontSize: 17,
     fontWeight: '500',
