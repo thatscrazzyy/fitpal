@@ -10,6 +10,7 @@ interface NutritionContextType {
   removeFoodItem: (id: string) => Promise<void>;
   updateCalorieGoal: (goal: number) => Promise<void>;
   loadTodaysNutrition: () => Promise<void>;
+  updateFoodHistory: (updatedFood: FoodItem) => Promise<void>;
 }
 
 const defaultNutrition: DailyNutrition = {
@@ -101,6 +102,37 @@ export const NutritionProvider: React.FC<{children: React.ReactNode}> = ({ child
     }
   };
 
+  const updateFoodHistory = async (updatedFood: FoodItem) => {
+    try {
+      // Find if this food already exists in history by name
+      const existingIndex = foodHistory.findIndex(
+        item => item.name.toLowerCase().trim() === updatedFood.name.toLowerCase().trim()
+      );
+      
+      let updatedHistory = [...foodHistory];
+      
+      if (existingIndex >= 0) {
+        // Update existing item
+        updatedHistory[existingIndex] = {
+          ...updatedHistory[existingIndex],
+          calories: updatedFood.calories,
+          protein: updatedFood.protein,
+          carbs: updatedFood.carbs,
+          fat: updatedFood.fat
+        };
+      } else {
+        // Add as a new item to the top of the history
+        updatedHistory = [updatedFood, ...updatedHistory.slice(0, 19)]; // Keep last 20 items
+      }
+      
+      setFoodHistory(updatedHistory);
+      await AsyncStorage.setItem('food_history', JSON.stringify(updatedHistory));
+      
+    } catch (error) {
+      console.error('Error updating food history:', error);
+    }
+  };
+
   const addFoodItem = async (item: Omit<FoodItem, 'id'>) => {
     try {
       if (!dailyNutrition) return;
@@ -187,7 +219,8 @@ export const NutritionProvider: React.FC<{children: React.ReactNode}> = ({ child
       addFoodItem,
       removeFoodItem,
       updateCalorieGoal,
-      loadTodaysNutrition
+      loadTodaysNutrition,
+      updateFoodHistory
     }}>
       {children}
     </NutritionContext.Provider>
@@ -201,5 +234,3 @@ export const useNutrition = () => {
   }
   return context;
 };
-
-
